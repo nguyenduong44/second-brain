@@ -34,8 +34,13 @@ export function listWikiFiles(): string[] {
 // Chọn 2–3 file liên quan nhất bằng khớp từ khóa đơn giản trong tên file + index.
 // Bản skeleton: chưa dùng embedding, đủ cho test v2.
 export function pickRelevant(question: string, max = 3): string[] {
-  const words = question.toLowerCase().split(/\W+/).filter((w) => w.length > 2);
-  const files = listWikiFiles().filter((f) => f !== "index.md" && f !== "log.md");
+  const words = question
+    .toLowerCase()
+    .split(/\W+/)
+    .filter((w) => w.length > 2);
+  const files = listWikiFiles().filter(
+    (f) => f !== "index.md" && f !== "log.md",
+  );
   const scored = files.map((f) => ({
     file: f,
     score: words.filter((w) => f.toLowerCase().includes(w)).length,
@@ -49,4 +54,20 @@ export function pickRelevant(question: string, max = 3): string[] {
 export function appendLog(line: string): void {
   const stamp = new Date().toISOString();
   fs.appendFileSync(path.join(WIKI_DIR, "log.md"), `\n- ${stamp} — ${line}`);
+}
+
+// File phân tích ảnh mới nhất trong wiki/photos/ (trừ README.md).
+// Tên file bắt đầu bằng timestamp ISO nên sort() là ra file mới nhất.
+export function latestPhotoAnalysis(): string | null {
+  const dir = path.join(WIKI_DIR, "photos");
+  try {
+    const files = fs
+      .readdirSync(dir)
+      .filter((f) => f.endsWith(".md") && f !== "README.md");
+    if (!files.length) return null;
+    files.sort();
+    return files[files.length - 1];
+  } catch {
+    return null;
+  }
 }

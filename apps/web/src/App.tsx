@@ -1,5 +1,13 @@
 import { useRef, useState } from "react";
-import { isLoggedIn, login, logout, sendChat, sendVoice, uploadPhoto } from "./lib/api";
+import {
+  isLoggedIn,
+  login,
+  logout,
+  sendChat,
+  sendVoiceChat,
+  fetchVoiceTts,
+  uploadPhoto,
+} from "./lib/api";
 
 type Tab = "chat" | "photos";
 
@@ -34,13 +42,19 @@ export default function App() {
       stream.getTracks().forEach((t) => t.stop());
       const audio = new Blob(chunks, { type: "audio/webm" });
       try {
-        const { transcript, reply, audioUrl } = await sendVoice(audio);
+        const { transcript, reply } = await sendVoiceChat(audio);
         setMessages((m) => [
           ...m,
           { role: "user", text: `🎙 ${transcript}` },
           { role: "assistant", text: reply },
         ]);
-        if (audioUrl) new Audio(audioUrl).play().catch(() => undefined);
+        // Chữ đã hiện lên màn hình, giờ mới gọi TTS để phát tiếng song song.
+        // TTS lỗi cũng không làm mất chữ, vì đã hiện rồi.
+        fetchVoiceTts(reply)
+          .then((audioUrl) => {
+            if (audioUrl) new Audio(audioUrl).play().catch(() => undefined);
+          })
+          .catch(() => undefined);
       } catch (e) {
         setMessages((m) => [
           ...m,
@@ -78,7 +92,7 @@ export default function App() {
   if (!authed) {
     return (
       <div style={{ maxWidth: 720, margin: "0 auto", padding: 16, fontFamily: "system-ui" }}>
-        <h1>second-brain</h1>
+        <h1>GENGAR</h1>
         <p>Nhập mật khẩu web (ADMIN_PASSWORD trong .env) để đăng nhập.</p>
         <input
           type="password"
@@ -96,7 +110,7 @@ export default function App() {
 
   return (
     <div style={{ maxWidth: 720, margin: "0 auto", padding: 16, fontFamily: "system-ui" }}>
-      <h1>second-brain</h1>
+      <h1>GENGAR</h1>
       <button
         onClick={() => {
           logout();
@@ -141,11 +155,7 @@ export default function App() {
       {tab === "photos" && (
         <div>
           <p>Upload ảnh đời sống — file gốc lưu bất biến, bản phân tích lưu vào wiki/photos/.</p>
-          <input
-            type="file"
-            accept="image/*"
-            onChange={(e) => onPhoto(e.target.files?.[0])}
-          />
+          <input type="file" accept="image/*" onChange={(e) => onPhoto(e.target.files?.[0])} />
           {photoResult && <p>{photoResult}</p>}
         </div>
       )}

@@ -33,7 +33,7 @@ DEFAULT_VOICE = os.getenv(
 )
 
 # Khởi tạo 1 lần khi service start; lần đầu tải model về cache.
-whisper = WhisperModel(MODEL_SIZE, device="cpu", compute_type="int8")
+whisper = WhisperModel(MODEL_SIZE, device="cpu", compute_type="int8", cpu_threads=4)
 
 
 class TTSRequest(BaseModel):
@@ -56,7 +56,8 @@ async def speech_to_text(file: UploadFile = File(...)):
         # language="vi": bắt buộc tiếng Việt, tránh whisper tự đoán sai
         # khi câu nói lẫn thuật ngữ tiếng Anh.
         segments, _info = whisper.transcribe(
-            tmp_path, language="vi", beam_size=5
+            tmp_path, language=None, beam_size=1,
+            vad_filter=True, condition_on_previous_text=False,
         )
         text = " ".join(seg.text.strip() for seg in segments).strip()
         return {"text": text}
@@ -77,7 +78,7 @@ async def text_to_speech(payload: TTSRequest):
         raise HTTPException(status_code=400, detail="Text is empty after cleaning")
 
     communicate = edge_tts.Communicate(
-        clean_text, payload.voice or DEFAULT_VOICE
+        clean_text, payload.voice or DEFAULT_VOICE, rate="+15%"
     )
     audio_bytes = bytearray()
     async for chunk in communicate.stream():

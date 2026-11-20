@@ -1,7 +1,7 @@
 // Gọi backend Express. Không gọi OmniRoute trực tiếp từ trình duyệt.
 // Mọi route /api/* (trừ /api/health và /api/calendar/life.ics) đều cần
 // JWT: đăng nhập 1 lần bằng ADMIN_PASSWORD, token lưu ở localStorage.
-const API_BASE = import.meta.env.VITE_API_URL ?? "http://localhost:4000";
+const API_BASE = import.meta.env.VITE_API_URL ?? "";
 
 function token(): string | null {
   return localStorage.getItem("sb_token");
@@ -50,7 +50,7 @@ export async function sendChat(message: string): Promise<string> {
   return data.reply;
 }
 
-export async function sendVoice(audio: Blob): Promise<{ transcript: string; reply: string; audioUrl: string }> {
+export async function sendVoiceChat(audio: Blob): Promise<{ transcript: string; reply: string }> {
   const form = new FormData();
   form.append("audio", audio, "voice.webm");
   const res = await fetch(`${API_BASE}/api/voice`, {
@@ -63,10 +63,22 @@ export async function sendVoice(audio: Blob): Promise<{ transcript: string; repl
     const data = (await res.json().catch(() => ({}))) as { error?: string };
     throw new Error(data.error ?? `voice failed: ${res.status}`);
   }
-  const data = (await res.json()) as { transcript: string; reply: string; audioUrl: string };
-  // audioUrl backend trả dạng "/audio/<id>.mp3" (tương đối theo server),
-  // web phải ghép với API_BASE thì trình duyệt mới phát được.
-  return { ...data, audioUrl: data.audioUrl ? `${API_BASE}${data.audioUrl}` : "" };
+  return res.json() as Promise<{ transcript: string; reply: string }>;
+}
+
+export async function fetchVoiceTts(text: string): Promise<string> {
+  const res = await fetch(`${API_BASE}/api/voice/tts`, {
+    method: "POST",
+    headers: { "Content-Type": "application/json", ...authHeaders() },
+    body: JSON.stringify({ text }),
+  });
+  checkAuth(res);
+  if (!res.ok) {
+    const data = (await res.json().catch(() => ({}))) as { error?: string };
+    throw new Error(data.error ?? `tts failed: ${res.status}`);
+  }
+  const data = (await res.json()) as { audioUrl: string };
+  return data.audioUrl ? `${API_BASE}${data.audioUrl}` : "";
 }
 
 export async function uploadPhoto(file: File): Promise<{ slug: string; analysisPath: string }> {

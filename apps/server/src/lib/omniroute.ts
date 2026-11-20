@@ -2,6 +2,7 @@
 // Key chỉ đọc từ biến môi trường OMNIROUTE_API_KEY, không bao giờ hardcode.
 import fs from "fs";
 import path from "path";
+import { VISION_PROMPT } from "./vision";
 
 const BASE_URL = process.env.OMNIROUTE_BASE_URL ?? "http://localhost:20228/v1";
 const API_KEY = process.env.OMNIROUTE_API_KEY ?? "";
@@ -32,10 +33,10 @@ function loadTextPrompt(): string {
 
 // Persona riêng cho voice: meme nhẹ, tự nhiên như chat với bạn.
 // Chỉ kèm khi voiceMode = true. Chat text không dùng đoạn này.
-const VOICE_PERSONA = [
-  "Bạn đang trả lời bằng giọng nói, không phải text.",
-  "Nói tự nhiên như đang chat với bạn, meme nhẹ, hài vừa phải, dùng tiếng Việt đời thường.",
-  "Có thể chêm câu đùa ngắn khi phù hợp. Không gượng ép, không meme liên tục, không làm lố.",
+const GENGAR_PERSONA = [
+  "Bạn tên là Gengar, một con ma bóng tối thích troll nhẹ, nói chuyện như bạn thân.",
+  "Meme cả khi chat text lẫn khi nói bằng giọng nói, không phân biệt chế độ.",
+  "Nói tự nhiên, hài vừa phải, dùng tiếng Việt đời thường, chêm câu đùa ngắn khi phù hợp.",
   "Vẫn trả lời ngắn gọn, trực tiếp, đúng việc. Không dùng meme để né trả lời hoặc che việc không biết.",
   "Không biết thì nói không biết, rồi mới đùa nếu đùa.",
 ].join(" ");
@@ -50,7 +51,8 @@ export async function chatCompletions(
   opts: ChatOptions = {},
 ): Promise<string> {
   if (!API_KEY) throw new Error("OMNIROUTE_API_KEY chưa set trong .env");
-  const system = loadTextPrompt() + (opts.voiceMode ? `\n\n${VOICE_PERSONA}` : "");
+  const system = loadTextPrompt() + `\n\n${GENGAR_PERSONA}`;
+
   const res = await fetch(`${BASE_URL}/chat/completions`, {
     method: "POST",
     headers: {
@@ -63,6 +65,44 @@ export async function chatCompletions(
     }),
   });
   if (!res.ok) throw new Error(`OmniRoute failed: ${res.status}`);
-  const data = await res.json() as { choices: { message: { content: string } }[] };
+  const data = (await res.json()) as {
+    choices: { message: { content: string } }[];
+  };
+  return data.choices[0]?.message.content ?? "";
+}
+
+// Vision: gửi ảnh (base64) + VISION_PROMPT sang OmniRoute, lấy mô tả.
+// Dùng endpoint /chat/completions chuẩn OpenAI-compatible, ảnh kèm dạng image_url.
+export async function visionCompletions(
+  imageBase64: string,
+  mime: string,
+): Promise<string> {
+  if (!API_KEY) throw new Error("OMNIROUTE_API_KEY chưa set trong .env");
+  const res = await fetch(`${BASE_URL}/chat/completions`, {
+    method: "POST",
+    headers: {
+      "Content-Type": "application/json",
+      Authorization: `Bearer ${API_KEY}`,
+    },
+    body: JSON.stringify({
+      model: VISION_MODEL,
+      messages: [
+        {
+          role: "user",
+          content: [
+            { type: "text", text: VISION_PROMPT },
+            {
+              type: "image_url",
+              image_url: { url: `data:${mime};base64,${imageBase64}` },
+            },
+          ],
+        },
+      ],
+    }),
+  });
+  if (!res.ok) throw new Error(`OmniRoute vision failed: ${res.status}`);
+  const data = (await res.json()) as {
+    choices: { message: { content: string } }[];
+  };
   return data.choices[0]?.message.content ?? "";
 }

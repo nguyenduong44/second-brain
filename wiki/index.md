@@ -34,6 +34,7 @@ AI đọc file này đầu tiên, rồi chỉ mở 2–3 file liên quan nhất.
 
 - `README.md` — quy tắc file phân tích ảnh, liên kết ngược về `raw-sources/photos/`.
 
+- `wiki/photos/2026-11-20T19-10-40-992Z-z7972405143310-373b4c3b31abc9e6aeeb18eb26127c94.md` — **Mô tả:**  
 ## Ghi chú thô
 
 - `raw-sources/inbox/` — ghi chú nhanh, ý tưởng chưa chốt, chỉ đọc, không sửa.

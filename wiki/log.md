@@ -12,3 +12,6 @@ Ghi mọi lần nạp dữ liệu / thay đổi wiki, theo thời gian. Mới nh
 ## 2026-11-19 — Vault v1 (dsh trial)
 
 - Tạo vault tối giản cho dsh, 4 note wiki + 2 note raw + 3 skill dsh.
+
+- 2026-11-20T18:55:34.850Z — Photo Vault: 2026-11-20T18-55-34-848Z-z7972405143310-373b4c3b31abc9e6aeeb18eb26127c94 — gốc raw-sources/photos/2026-11/2026-11-20T18-55-34-848Z-z7972405143310-373b4c3b31abc9e6aeeb18eb26127c94.jpg, phân tích wiki/photos/2026-11-20T18-55-34-848Z-z7972405143310-373b4c3b31abc9e6aeeb18eb26127c94.md
+- 2026-11-20T19:10:52.999Z — Photo Vault: 2026-11-20T19-10-40-992Z-z7972405143310-373b4c3b31abc9e6aeeb18eb26127c94 — gốc raw-sources/photos/2026-11/2026-11-20T19-10-40-992Z-z7972405143310-373b4c3b31abc9e6aeeb18eb26127c94.jpg, phân tích wiki/photos/2026-11-20T19-10-40-992Z-z7972405143310-373b4c3b31abc9e6aeeb18eb26127c94.md
