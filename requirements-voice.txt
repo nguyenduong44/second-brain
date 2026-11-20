@@ -1,0 +1,6 @@
+# Voice deps cho second-brain (STT + TTS). Python 3.11+ khuyến nghị.
+# Cài: pip install -r requirements-voice.txt
+# Lần chạy STT đầu tiên tải model faster-whisper "small" ~500MB về cache
+# (~/.cache/huggingface). Các lần sau dùng lại, không tải nữa.
+faster-whisper>=1.0.0
+edge-tts>=6.1.0

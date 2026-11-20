@@ -1,0 +1,79 @@
+# second-brain — production trên VPS bằng Docker Compose.
+# Cách dùng: cp .env.example .env (điền OMNIROUTE_API_KEY thật), rồi:
+#   docker compose up -d --build
+#   curl http://localhost:4000/api/health
+# Compose này gồm 3 service: voice (STT/TTS, nội bộ), server (API :4000),
+# web (nginx :80). Voice chỉ nghe trong mạng compose, không expose ra host.
+#
+# Lưu ý OmniRoute:
+# - OmniRoute KHÔNG chạy trong compose này. Nó phải chạy riêng trên VPS
+#   (dùng chính compose của nó ở ~/docker-servers/omni-route, hoặc trỏ
+#   OMNIROUTE_BASE_URL sang gateway của bạn).
+# - Trên VPS, server trong container không thấy localhost của host, nên
+#   OMNIROUTE_BASE_URL mặc định ở dưới là http://host.docker.internal:20228/v1
+#   (Docker Desktop / Docker Engine mới hỗ trợ host.docker.internal trên Linux).
+#   Nếu không ăn, đổi thành http://<IP-LAN-của-VPS>:20228/v1.
+services:
+  server:
+    build:
+      context: .
+      dockerfile: apps/server/Dockerfile
+    container_name: second-brain-server
+    # File .md / ảnh do web tạo ra thuộc uid 1000, không bị root khóa quyền,
+    # để OpenCode / Pi Agent / scripts/sync.sh ở ngoài thao tác bình thường.
+    user: "1000:1000"
+    env_file:
+      - .env
+    environment:
+      - OMNIROUTE_API_KEY=${OMNIROUTE_API_KEY:?OMNIROUTE_API_KEY chưa set trong .env}
+      - OMNIROUTE_BASE_URL=${OMNIROUTE_BASE_URL:-http://host.docker.internal:20228/v1}
+      - BRAIN_ROOT=/second-brain
+      - VOICE_TTS_VOICE=${VOICE_TTS_VOICE:-vi-VN-HoaiMyNeural}
+      - VOICE_SERVICE_URL=http://voice:8000
+      - FAST_MODEL=${FAST_MODEL:-omniroute/auto}
+      - CHAT_MODEL=${CHAT_MODEL:-omniroute/auto/coding}
+      - VISION_MODEL=${VISION_MODEL:-omniroute/auto}
+      - WHISPER_MODEL=${WHISPER_MODEL:-small}
+      - PORT=4000
+    volumes:
+      # Mount cả repo vào container: server đọc/ghi wiki/ + raw-sources/.
+      # STT/TTS đi qua service `voice`, không gọi scripts/ trong container.
+      - ./:/second-brain
+    ports:
+      - "127.0.0.1:4000:4000"
+    depends_on:
+      - voice
+    restart: unless-stopped
+
+  voice:
+    build:
+      context: .
+      dockerfile: apps/voice/Dockerfile
+    container_name: second-brain-voice
+    environment:
+      - WHISPER_MODEL=${WHISPER_MODEL:-small}
+      - VOICE_TTS_VOICE=${VOICE_TTS_VOICE:-vi-VN-HoaiMyNeural}
+    volumes:
+      # Cache model faster-whisper "small" (~500MB, tải ở lần STT đầu).
+      # Mất khi `docker compose down -v` — khi đó tải lại 1 lần.
+      - whisper_cache:/root/.cache/huggingface
+    restart: unless-stopped
+
+  web:
+    build: ./apps/web
+    container_name: second-brain-web
+    ports:
+      - "80:80"
+    depends_on:
+      - server
+    restart: unless-stopped
+
+volumes:
+  whisper_cache:
+
+  # OmniRoute — placeholder, KHÔNG bật trong compose này.
+  # Chạy OmniRoute bằng compose riêng của nó, rồi trỏ OMNIROUTE_BASE_URL tới nó.
+  # omniroute:
+  #   image: diegosouzapw/omniroute:latest
+  #   ports: ["127.0.0.1:20228:20228"]
+  #   volumes: ["./omniroute-data:/app/data"]

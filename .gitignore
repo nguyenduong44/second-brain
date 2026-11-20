@@ -1,0 +1,30 @@
+# Secrets — không bao giờ commit
+.env
+.env.*
+!.env.example
+.credentials.yaml
+**/*.pem
+**/*.key
+secrets/
+
+# Node
+node_modules/
+dist/
+build/
+*.log
+
+# File audio tạm của voice (thu âm webm, mp3 TTS) — tạo lại được, không commit.
+# Ảnh .jpg trong raw-sources/photos KHÔNG bị ảnh hưởng.
+*.wav
+*.mp3
+*.webm
+__pycache__/
+
+# Lưu ý: thư mục .dsh KHÔNG ignore — skill dsh trong .dsh/skills là một phần của repo.
+
+# OS
+.DS_Store
+Thumbs.db
+desktop.ini
+
+# Lưu ý: raw-sources/photos KHÔNG ignore — ảnh gốc là một phần của private repo.

@@ -1,0 +1,21 @@
+{
+  // Copy sang .opencode/opencode.jsonc (file thật, không commit key).
+  // Key lấy từ ~/.secrets: export OMNIROUTE_API_KEY=... (không ghi giá trị vào đây).
+  "$schema": "https://opencode.ai/config.json",
+  "provider": {
+    "omniroute": {
+      "npm": "@ai-sdk/openai-compatible",
+      "name": "OmniRoute",
+      "options": {
+        "baseURL": "http://localhost:20228/v1",
+        "apiKey": "{env:OMNIROUTE_API_KEY}"
+      },
+      "models": {
+        "auto": { "name": "omniroute/auto" },
+        "auto/coding": { "name": "omniroute/auto/coding" }
+      }
+    }
+  },
+  "model": "omniroute/auto/coding",
+  "small_model": "omniroute/auto"
+}

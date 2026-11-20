@@ -1,0 +1,7 @@
+# Cron đồng bộ second-brain mỗi 30 phút.
+# Cài bằng: crontab -e, rồi dán dòng dưới (sửa đường dẫn theo máy của bạn).
+# 0,30 * * * * /bin/bash /home/nguyenduong/second-brain/scripts/sync.sh >> /home/nguyenduong/second-brain/sync.log 2>&1
+#
+# Lưu ý: cron chạy với môi trường tối thiểu. Nếu git push cần SSH key,
+# đảm bảo key đã load (ssh-agent) hoặc dùng HTTPS + credential helper.
+# Không ghi secret vào file cron.
